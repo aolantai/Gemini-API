@@ -60,7 +60,7 @@ async def rotate_1psidts(
     if path.is_file() and time.time() - os.path.getmtime(path) <= 60:
         return path.read_text(), None
 
-    async with AsyncClient(http2=True, proxy=proxy) as client:
+    async with AsyncClient(proxy=proxy) as client:
         response = await client.post(
             url=Endpoint.ROTATE_COOKIES,
             headers=Headers.ROTATE_COOKIES.value,
@@ -73,6 +73,7 @@ async def rotate_1psidts(
 
         if new_1psidts := response.cookies.get("__Secure-1PSIDTS"):
             path.write_text(new_1psidts)
+            path.chmod(0o600)  # Restrict cookie cache to owner read/write only
             return new_1psidts, response.cookies
 
         return None, response.cookies
